@@ -1,35 +1,38 @@
-const { ApolloServer } = require('apollo-server');
+const { ApolloServer } = require('@apollo/server');
+const { startStandaloneServer } = require('@apollo/server/standalone');
+const jwt = require('jsonwebtoken');
 const typeDefs = require('./db/schema');
 const resolvers = require('./db/resolvers');
 const conectarDB = require('./config/db');
-const jwt = require('jsonwebtoken');
 require('dotenv').config({ path: '.env' });
 
-// Conect Data Base
-conectarDB();
-process.on('exit', function () {
-  console.log('aqui pasa algo?')
-})
+const buildContext = ({ req }) => {
+  const token = req.headers.authorization || '';
+  if (!token) return {};
 
-// Server 
+  try {
+    const user = jwt.verify(token.replace('Bearer ', ''), process.env.SECRET);
+    return { user };
+  } catch (err) {
+    console.log('There was an error while verifying token: ', err);
+    return {};
+  }
+};
+
 const server = new ApolloServer({
   typeDefs,
-  resolvers,
-  context: ({req}) => {    
-    // the authorization token should arrive to start the session
-    const token = req.headers['authorization'] || 'No Token Default';
-    if (token !== 'No token' && token !== 'No Token Default') {
-      try {
-        const user = jwt.verify(token.replace('Bearer ', ''), process.env.SECRET);
-        return { user }
-      } catch (err) {
-        console.log("There was a error : ", err);
-      }
-    }
-  }
+  resolvers
 });
 
-// Run Server
-server.listen({ port: process.env.PORT || 4000 }).then( ({url}) => {
-  console.log(`Server running in URL ${url}`);  
-})
+const startServer = async () => {
+  await conectarDB();
+
+  const { url } = await startStandaloneServer(server, {
+    listen: { port: parseInt(process.env.PORT, 10) || 4000 },
+    context: async ({ req }) => buildContext({ req })
+  });
+
+  console.log(`Server running in URL ${url}`);
+};
+
+startServer();

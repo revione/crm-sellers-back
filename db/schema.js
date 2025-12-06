@@ -1,7 +1,5 @@
-const { gql } = require('apollo-server');
-
 // Schema
-const typeDefs = gql`
+const typeDefs = `#graphql
 
   type User {
     id: ID
