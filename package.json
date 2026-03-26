@@ -23,7 +23,7 @@
   "author": "revione",
   "license": "ISC",
   "dependencies": {
-    "@apollo/server": "^5.2.0",
+    "@apollo/server": "^5.5.0",
     "@as-integrations/express5": "^1.1.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
